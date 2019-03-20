@@ -10,4 +10,6 @@ public class ArangoAttributes {
     public static final String PREFIX = "prefix";
     public static final String NAMESPACE = "namespace";
     public static final String URI_LOCAL_NAME = "local_name";
+    public static final String EDGE_FROM = "_from";
+    public static final String EDGE_TO = "_to";
 }
