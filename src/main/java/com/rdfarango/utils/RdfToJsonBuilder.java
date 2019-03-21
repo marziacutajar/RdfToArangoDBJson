@@ -20,7 +20,7 @@ public class RdfToJsonBuilder {
     private int namespace_count;
 
     private Map<String, Integer> URI_RESOURCES_MAP;
-    private Map<String, String> LITERALS_MAP;
+    private Map<Literal, Integer> LITERALS_MAP;
     private Map<String, String> BLANK_NODES_MAP;
     private Map<String, String> PROPERTIES_MAP;
     //TODO properties can't also be used as subjects/objects, so if this is encountered in data, return error to user
@@ -45,6 +45,7 @@ public class RdfToJsonBuilder {
         ProcessNamespaces(model);
         ProcessSubjects(model);
         ProcessObjects(model);
+        ProcessTriples(model);
 
         return this;
     }
@@ -107,8 +108,11 @@ public class RdfToJsonBuilder {
             //handle literal
             ObjectNode json_object = mapper.createObjectNode();
             Literal l = node.asLiteral();
-            //TODO add key
+
             //TODO possibly handle literals of different types seperately
+            //TODO maybe generate better key
+            int key = l.hashCode();
+            json_object.put(ArangoAttributes.KEY, key);
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.LITERAL);
             json_object.put(ArangoAttributes.LITERAL_DATA_TYPE, l.getDatatypeURI());
             json_object.put(ArangoAttributes.LITERAL_VALUE, l.getValue().toString());
@@ -116,6 +120,8 @@ public class RdfToJsonBuilder {
             if(l.getDatatypeURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")){
                 json_object.put(ArangoAttributes.LITERAL_LANGUAGE, l.getLanguage());
             }
+
+            LITERALS_MAP.put(l, key);
 
             return json_object;
         }
@@ -156,6 +162,15 @@ public class RdfToJsonBuilder {
         return json_object;
     }
 
+    private void ProcessTriples(Model model){
+        for (final StmtIterator stmts = model.listStatements(); stmts.hasNext(); ) {
+            Statement stmt = stmts.next();
+            ObjectNode predicate = ProcessPredicate(stmt.getPredicate());
+
+            AddEdgeDocument(getResourceKey(stmt.getSubject()), getObjectKey(stmt.getObject()), predicate.get(ArangoAttributes.URI).asText());
+        }
+    }
+
     private ObjectNode ProcessPredicate(Property pred){
         //TODO check if PROPERTIES_MAP already contains uri, if so skip
         ObjectNode json_object = mapper.createObjectNode();
@@ -165,24 +180,20 @@ public class RdfToJsonBuilder {
         json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.PROPERTY);
         json_object.put(ArangoAttributes.URI, uri);
 
+        jsonValues.add(json_object);
+
         return json_object;
     }
 
-    private ArrayNode ProcessTriples(Model model){
-        ArrayNode json_documents = mapper.createArrayNode();
+    private void AddEdgeDocument(String subjectKey, String objectKey, String predicateUri){
+        ObjectNode json_edge_object = mapper.createObjectNode();
 
-        for (final StmtIterator stmts = model.listStatements(); stmts.hasNext(); ) {
-            //TODO
-            Statement stmt = stmts.next();
-            ObjectNode predicate = ProcessPredicate(stmt.getPredicate());
-            ObjectNode json_edge_object = mapper.createObjectNode();
+        //when importing into arango, we will then tell it to append a prefix (collection name) to _from and _to values
+        json_edge_object.put(ArangoAttributes.EDGE_FROM, subjectKey);
+        json_edge_object.put(ArangoAttributes.EDGE_TO, objectKey);
+        json_edge_object.put(ArangoAttributes.EDGE_PREDICATE, predicateUri);
 
-            //TODO pass subject and object ids/keys in below
-            //json_edge_object.put(ArangoAttributes.EDGE_FROM, );
-            //json_edge_object.put(ArangoAttributes.EDGE_TO, );
-        }
-
-        return  json_documents;
+        jsonEdges.add(json_edge_object);
     }
 
     private String getNextBlankNodeKey(){
@@ -195,5 +206,19 @@ public class RdfToJsonBuilder {
         String key = "NAMESPACE_" + namespace_count;
         namespace_count++;
         return key;
+    }
+
+    private String getResourceKey(Resource res){
+        if(res.isAnon())
+            return BLANK_NODES_MAP.get(res.getURI());
+
+        return URI_RESOURCES_MAP.get(res.getURI()).toString();
+    }
+
+    private String getObjectKey(RDFNode node){
+        if(node.isLiteral())
+            return LITERALS_MAP.get(node.asLiteral()).toString();
+
+        return getResourceKey(node.asResource());
     }
 }
