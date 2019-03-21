@@ -1,6 +1,8 @@
 package com.rdfarango.utils;
 
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rdfarango.constants.ArangoAttributes;
@@ -8,6 +10,8 @@ import com.rdfarango.constants.RdfObjectTypes;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.SplitIRI;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,6 +47,28 @@ public class RdfToJsonBuilder {
         ProcessObjects(model);
 
         return this;
+    }
+
+    @SuppressWarnings("unused")
+    public ArrayNode GetJsonValuesCollection(){
+        return jsonValues;
+    }
+
+    @SuppressWarnings("unused")
+    public ArrayNode GetJsonEdgesCollection(){
+        return jsonEdges;
+    }
+
+    @SuppressWarnings("unused")
+    public void SaveJsonCollectionsToFiles(String valuesFilePath, String edgesFilePath){
+        try {
+            ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+            writer.writeValue(new File(valuesFilePath), jsonValues);
+            writer.writeValue(new File(edgesFilePath), jsonEdges);
+        }
+        catch(IOException exp){
+            System.err.println("Error while creating JSON file. Reason: " + exp.getMessage());
+        }
     }
 
     private void ProcessNamespaces(Model model){
@@ -130,7 +156,7 @@ public class RdfToJsonBuilder {
         return json_object;
     }
 
-    private static ObjectNode ProcessPredicate(ObjectMapper mapper, Property pred){
+    private ObjectNode ProcessPredicate(Property pred){
         //TODO check if PROPERTIES_MAP already contains uri, if so skip
         ObjectNode json_object = mapper.createObjectNode();
         String uri = pred.getURI();
@@ -142,13 +168,13 @@ public class RdfToJsonBuilder {
         return json_object;
     }
 
-    private static ArrayNode ProcessTriples(ObjectMapper mapper, Model model){
+    private ArrayNode ProcessTriples(Model model){
         ArrayNode json_documents = mapper.createArrayNode();
 
         for (final StmtIterator stmts = model.listStatements(); stmts.hasNext(); ) {
             //TODO
             Statement stmt = stmts.next();
-            ObjectNode predicate = ProcessPredicate(mapper, stmt.getPredicate());
+            ObjectNode predicate = ProcessPredicate(stmt.getPredicate());
             ObjectNode json_edge_object = mapper.createObjectNode();
 
             //TODO pass subject and object ids/keys in below
