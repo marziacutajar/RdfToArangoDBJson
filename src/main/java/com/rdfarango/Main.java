@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rdfarango.constants.RdfObjectTypes;
+import com.rdfarango.utils.Hasher;
 import org.apache.commons.cli.*;
 import org.apache.jena.rdf.model.*;
 import com.rdfarango.constants.ArangoAttributes;
-import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.util.SplitIRI;
 
 import java.io.File;
@@ -126,7 +126,7 @@ public class Main {
             //TODO check if URI_RESOURCES_MAP already contains uri, if so skip
             //TODO find better hash function that generates unique keys that aren't negative numbers
             String uri = res.getURI();
-            int key = uri.hashCode();
+            int key = Hasher.HashString(uri);
             json_object.put(ArangoAttributes.KEY, key);
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.URI_RESOURCE);
             json_object.put(ArangoAttributes.URI, uri);
@@ -155,7 +155,7 @@ public class Main {
         //TODO check if PROPERTIES_MAP already contains uri, if so skip
         ObjectNode json_object = mapper.createObjectNode();
         String uri = pred.getURI();
-        int key = uri.hashCode();
+        int key = Hasher.HashString(uri);
         json_object.put(ArangoAttributes.KEY, key);
         json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.PROPERTY);
         json_object.put(ArangoAttributes.URI, uri);
