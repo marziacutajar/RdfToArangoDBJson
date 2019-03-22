@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+//TODO add comments for every important part
+
 public class RdfToJsonBuilder {
     private int blank_node_count;
     private int namespace_count;
@@ -22,8 +24,6 @@ public class RdfToJsonBuilder {
     private Map<String, Integer> URI_RESOURCES_MAP;
     private Map<Literal, Integer> LITERALS_MAP;
     private Map<String, String> BLANK_NODES_MAP;
-    private Map<String, String> PROPERTIES_MAP;
-    //TODO properties can't also be used as subjects/objects, so if this is encountered in data, return error to user
 
     private ArrayNode jsonValues;
     private ArrayNode jsonEdges;
@@ -36,7 +36,6 @@ public class RdfToJsonBuilder {
         URI_RESOURCES_MAP = new HashMap<>();
         LITERALS_MAP = new HashMap<>();
         BLANK_NODES_MAP = new HashMap<>();
-        PROPERTIES_MAP = new HashMap<>();
         jsonValues = mapper.createArrayNode();
         jsonEdges = mapper.createArrayNode();
     }
@@ -90,31 +89,30 @@ public class RdfToJsonBuilder {
     }
 
     private void ProcessSubjects(Model model){
-        //iterate over all objects(uri resources, blank nodes, literals) and create json doc for each
-        for (final NodeIterator nodes = model.listObjects(); nodes.hasNext(); ) {
-            jsonValues.add(ProcessObject(nodes.next()));
+        //iterate over all subjects(uri resources, blank nodes) and create json doc for each
+        for (final ResIterator nodes = model.listSubjects(); nodes.hasNext(); ) {
+            ProcessResource(nodes.next());
         }
     }
 
     private void ProcessObjects(Model model){
-        //iterate over all subjects(uri resources, blank nodes) and create json doc for each
-        for (final ResIterator nodes = model.listSubjects(); nodes.hasNext(); ) {
-            jsonValues.add(ProcessResource(nodes.next()));
+        //iterate over all objects(uri resources, blank nodes, literals) and create json doc for each
+        for (final NodeIterator nodes = model.listObjects(); nodes.hasNext(); ) {
+            ProcessObject(nodes.next());
         }
     }
 
-    private ObjectNode ProcessObject(RDFNode node){
+    private void ProcessObject(RDFNode node){
         if(node.isLiteral()){
             //handle literal
             ObjectNode json_object = mapper.createObjectNode();
             Literal l = node.asLiteral();
 
-            //TODO possibly handle literals of different types seperately
-            //TODO maybe generate better key
             int key = l.hashCode();
             json_object.put(ArangoAttributes.KEY, key);
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.LITERAL);
             json_object.put(ArangoAttributes.LITERAL_DATA_TYPE, l.getDatatypeURI());
+            //TODO possibly handle literals of different types seperately below
             json_object.put(ArangoAttributes.LITERAL_VALUE, l.getValue().toString());
 
             if(l.getDatatypeURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")){
@@ -123,66 +121,64 @@ public class RdfToJsonBuilder {
 
             LITERALS_MAP.put(l, key);
 
-            return json_object;
+            jsonValues.add(json_object);
         }
-
-        //else handle resource
-        return ProcessResource(node.asResource());
+        else {
+            //else handle resource
+            ProcessResource(node.asResource());
+        }
     }
 
-    private ObjectNode ProcessResource(Resource res){
-        ObjectNode json_object = mapper.createObjectNode();
+    private void ProcessResource(Resource res){
         if (res.isURIResource()){
-            //handle uri
-            //TODO check if URI_RESOURCES_MAP already contains uri, if so skip
-            //TODO find better hash function that generates unique keys that aren't negative numbers
-            String uri = res.getURI();
-            int key = Hasher.HashString(uri);
-            json_object.put(ArangoAttributes.KEY, key);
-            json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.URI_RESOURCE);
-            json_object.put(ArangoAttributes.URI, uri);
-
-            //TODO decide whether below namespace and localName attributes are really needed
-            json_object.put(ArangoAttributes.NAMESPACE, SplitIRI.namespace(uri));
-            json_object.put(ArangoAttributes.URI_LOCAL_NAME, SplitIRI.localname(uri));
-
-            URI_RESOURCES_MAP.put(uri, key);
+            ProcessUri(res);
         }
         else if (res.isAnon()){
             //handle blank node
-            //TODO check if BLANK_NODES_MAP already contains uri, if so skip
             String anonId = res.getId().toString();
+            if(BLANK_NODES_MAP.containsKey(anonId))
+                return;
+
+            ObjectNode json_object = mapper.createObjectNode();
+
             String key = getNextBlankNodeKey();
             json_object.put(ArangoAttributes.KEY, key);
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.BLANK_NODE);
             blank_node_count++;
             BLANK_NODES_MAP.put(anonId, key);
-        }
 
-        return json_object;
+            jsonValues.add(json_object);
+        }
     }
 
     private void ProcessTriples(Model model){
         for (final StmtIterator stmts = model.listStatements(); stmts.hasNext(); ) {
             Statement stmt = stmts.next();
-            ObjectNode predicate = ProcessPredicate(stmt.getPredicate());
+            Property prop = stmt.getPredicate();
+            ProcessUri(prop);
 
-            AddEdgeDocument(getResourceKey(stmt.getSubject()), getObjectKey(stmt.getObject()), predicate.get(ArangoAttributes.URI).asText());
+            AddEdgeDocument(getResourceKey(stmt.getSubject()), getObjectKey(stmt.getObject()), prop.getURI());
         }
     }
 
-    private ObjectNode ProcessPredicate(Property pred){
-        //TODO check if PROPERTIES_MAP already contains uri, if so skip
+    private void ProcessUri(Resource resource){
+        //handle uri
+        String uri = resource.getURI();
+        if(URI_RESOURCES_MAP.containsKey(uri))
+            return;
+
+        int key = uri.hashCode();
         ObjectNode json_object = mapper.createObjectNode();
-        String uri = pred.getURI();
-        int key = Hasher.HashString(uri);
         json_object.put(ArangoAttributes.KEY, key);
-        json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.PROPERTY);
+        json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.URI);
         json_object.put(ArangoAttributes.URI, uri);
 
-        jsonValues.add(json_object);
+        //TODO decide whether below namespace and localName attributes are really needed
+        //json_object.put(ArangoAttributes.NAMESPACE, SplitIRI.namespace(uri));
+        //json_object.put(ArangoAttributes.URI_LOCAL_NAME, SplitIRI.localname(uri));
 
-        return json_object;
+        URI_RESOURCES_MAP.put(uri, key);
+        jsonValues.add(json_object);
     }
 
     private void AddEdgeDocument(String subjectKey, String objectKey, String predicateUri){

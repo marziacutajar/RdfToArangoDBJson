@@ -2,7 +2,7 @@ package com.rdfarango.constants;
 
 public class ArangoAttributes {
     public static final String KEY = "_key";
-    public static final String TYPE = "_type";
+    public static final String TYPE = "type";
     public static final String LITERAL_DATA_TYPE = "data_type";
     public static final String LITERAL_VALUE = "value";
     public static final String LITERAL_LANGUAGE = "lang";

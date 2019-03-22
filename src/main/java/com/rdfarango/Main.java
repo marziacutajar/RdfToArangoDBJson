@@ -1,24 +1,10 @@
 package com.rdfarango;
 
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.rdfarango.constants.RdfObjectTypes;
-import com.rdfarango.utils.Hasher;
 import com.rdfarango.utils.RdfToJsonBuilder;
 import org.apache.commons.cli.*;
 import org.apache.jena.rdf.model.*;
-import com.rdfarango.constants.ArangoAttributes;
-import org.apache.jena.util.SplitIRI;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-//TODO add comments for every important part
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Main {
 
@@ -28,7 +14,6 @@ public class Main {
 
         // create the Options
         Options options = new Options();
-        //options.addOption( "f", "all", true, "Path to rdf file");
         options.addOption(Option.builder("f").longOpt("file").hasArg().desc("Path to rdf file").argName("file").required().build());
 
         try {
@@ -43,10 +28,15 @@ public class Main {
             System.out.println("Parsing RDF into JSON...");
             RdfToJsonBuilder builder = new RdfToJsonBuilder();
             builder.RDFModelToJson(model);
-            builder.SaveJsonCollectionsToFiles("arango_values.json", "arango_edges.json");
+
+            // save resulting json documents to file
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+            String formattedDate = sdf.format(new Date());
+            String valuesFileName = "results/arango_values_" + formattedDate + ".json";
+            String edgesFileName = "results/arango_edges_" + formattedDate + ".json";
+            builder.SaveJsonCollectionsToFiles(valuesFileName, edgesFileName);
         }
         catch(ParseException exp) {
-            // oops, something went wrong
             System.err.println( "Parsing failed.  Reason: " + exp.getMessage() );
         }
     }
