@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rdfarango.constants.ArangoAttributes;
 import com.rdfarango.constants.RdfObjectTypes;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.datatypes.xsd.impl.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.SplitIRI;
 
@@ -112,11 +115,17 @@ public class RdfToJsonBuilder {
             json_object.put(ArangoAttributes.KEY, key);
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.LITERAL);
             json_object.put(ArangoAttributes.LITERAL_DATA_TYPE, l.getDatatypeURI());
-            //TODO possibly handle literals of different types seperately below
-            json_object.put(ArangoAttributes.LITERAL_VALUE, l.getValue().toString());
 
-            if(l.getDatatypeURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")){
+            var literalType = l.getDatatype();
+            if(literalType instanceof XSDAbstractDateTimeType || literalType instanceof XSDBaseStringType){
+                json_object.put(ArangoAttributes.LITERAL_VALUE, l.getString());
+            }
+            else if (literalType instanceof RDFLangString){
+                json_object.put(ArangoAttributes.LITERAL_VALUE, l.getString());
                 json_object.put(ArangoAttributes.LITERAL_LANGUAGE, l.getLanguage());
+            }
+            else{
+                json_object.putPOJO(ArangoAttributes.LITERAL_VALUE, l.getValue());
             }
 
             LITERALS_MAP.put(l, key);
