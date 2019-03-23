@@ -155,7 +155,8 @@ public class RdfToJsonBuilder {
         for (final StmtIterator stmts = model.listStatements(); stmts.hasNext(); ) {
             Statement stmt = stmts.next();
             Property prop = stmt.getPredicate();
-            ProcessUri(prop);
+            //TODO consider not adding JSON docs for predicates that aren't subjects in other triples
+            //ProcessUri(prop);
 
             AddEdgeDocument(getResourceKey(stmt.getSubject()), getObjectKey(stmt.getObject()), prop.getURI());
         }
