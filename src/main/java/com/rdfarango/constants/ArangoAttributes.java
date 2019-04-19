@@ -13,4 +13,5 @@ public class ArangoAttributes {
     public static final String EDGE_FROM = "_from";
     public static final String EDGE_TO = "_to";
     public static final String EDGE_PREDICATE = "predicateUri";
+    public static final String GRAPH_NAME = "g";
 }

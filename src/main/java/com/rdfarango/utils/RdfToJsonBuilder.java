@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rdfarango.constants.ArangoAttributes;
 import com.rdfarango.constants.RdfObjectTypes;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.impl.*;
@@ -33,6 +34,8 @@ public class RdfToJsonBuilder {
 
     ObjectMapper mapper = new ObjectMapper();
 
+    private String currentGraphName;
+
     public RdfToJsonBuilder(){
         blank_node_count = 0;
         namespace_count = 0;
@@ -43,7 +46,8 @@ public class RdfToJsonBuilder {
         jsonEdges = mapper.createArrayNode();
     }
 
-    public RdfToJsonBuilder RDFModelToJson(Model model){
+    public RdfToJsonBuilder RDFModelToJson(Model model, String graphName){
+        currentGraphName = graphName;
         ProcessNamespaces(model);
         ProcessSubjects(model);
         ProcessObjects(model);
@@ -198,6 +202,9 @@ public class RdfToJsonBuilder {
         json_edge_object.put(ArangoAttributes.EDGE_FROM, subjectKey);
         json_edge_object.put(ArangoAttributes.EDGE_TO, objectKey);
         json_edge_object.put(ArangoAttributes.EDGE_PREDICATE, predicateUri);
+
+        if(!StringUtils.isBlank(currentGraphName))
+            json_edge_object.put(ArangoAttributes.GRAPH_NAME, currentGraphName);
 
         jsonEdges.add(json_edge_object);
     }
