@@ -201,6 +201,8 @@ public class RdfToJsonBuilder {
         //when importing into arango, we will then tell it to append a prefix (collection name) to _from and _to values
         json_edge_object.put(ArangoAttributes.EDGE_FROM, subjectKey);
         json_edge_object.put(ArangoAttributes.EDGE_TO, objectKey);
+        //TODO if we create seperate vertices for all predicate uris, consider setting this to the id/key of the predicate's vertex
+        //however we don't have to do that..
         json_edge_object.put(ArangoAttributes.EDGE_PREDICATE, predicateUri);
 
         if(!StringUtils.isBlank(currentGraphName))
