@@ -46,10 +46,6 @@ public class Main {
                     "   ?g dc:publisher ?who .\n" +
                     "   GRAPH ?g { ?x foaf:mbox ?mbox }\n" +
                     "}");
-        }
-        catch(QueryException qe){
-            System.out.println("Invalid SPARQL query.");
-        }
 
         System.out.println("getting graphs");
 
@@ -64,6 +60,11 @@ public class Main {
         System.out.println("writing algebra");
 
         SSE.write(op);
+
+        }
+        catch(QueryException qe){
+            System.out.println("Invalid SPARQL query.");
+        }
 
         try {
             // parse the command line arguments
