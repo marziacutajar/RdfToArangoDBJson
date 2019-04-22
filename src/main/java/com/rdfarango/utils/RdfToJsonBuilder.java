@@ -120,7 +120,7 @@ public class RdfToJsonBuilder {
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.LITERAL);
             json_object.put(ArangoAttributes.LITERAL_DATA_TYPE, l.getDatatypeURI());
 
-            var literalType = l.getDatatype();
+            RDFDatatype literalType = l.getDatatype();
             if(literalType instanceof XSDAbstractDateTimeType || literalType instanceof XSDBaseStringType){
                 json_object.put(ArangoAttributes.LITERAL_VALUE, l.getString());
             }

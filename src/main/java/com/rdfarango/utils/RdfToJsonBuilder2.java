@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rdfarango.constants.ArangoAttributes;
 import com.rdfarango.constants.RdfObjectTypes;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.impl.RDFLangString;
 import org.apache.jena.datatypes.xsd.impl.XSDAbstractDateTimeType;
 import org.apache.jena.datatypes.xsd.impl.XSDBaseStringType;
@@ -64,7 +65,7 @@ public class RdfToJsonBuilder2 {
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.LITERAL);
             json_object.put(ArangoAttributes.LITERAL_DATA_TYPE, l.getDatatypeURI());
 
-            var literalType = l.getDatatype();
+            RDFDatatype literalType = l.getDatatype();
             if(literalType instanceof XSDAbstractDateTimeType || literalType instanceof XSDBaseStringType){
                 json_object.put(ArangoAttributes.LITERAL_VALUE, l.getString());
             }
