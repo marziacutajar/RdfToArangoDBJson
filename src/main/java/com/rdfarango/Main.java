@@ -4,10 +4,7 @@ import com.rdfarango.utils.RdfToJsonBuilder;
 import com.rdfarango.utils.RdfToJsonBuilder2;
 import org.apache.commons.cli.*;
 import org.apache.jena.base.Sys;
-import org.apache.jena.query.ARQ;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.algebra.Algebra;
@@ -35,18 +32,24 @@ public class Main {
 
         //Testing example of ARQ sparql algebra
         //TODO this QueryFactory.create part is VERY SLOWWW... find solution (it's not the string concatenation... so IDK!!!!)
-        Query query = QueryFactory.create("PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n" +
-                "PREFIX dc: <http://purl.org/dc/elements/1.1/>\n" +
-                "\n" +
-                "SELECT ?who ?g ?mbox\n" +
-                "FROM <http://example.org/dft.ttl>\n" +
-                "FROM NAMED <http://example.org/alice>\n" +
-                "FROM NAMED <http://example.org/bob>\n" +
-                "WHERE\n" +
-                "{\n" +
-                "   ?g dc:publisher ?who .\n" +
-                "   GRAPH ?g { ?x foaf:mbox ?mbox }\n" +
-                "}");
+
+        try {
+            Query query = QueryFactory.create("PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n" +
+                    "PREFIX dc: <http://purl.org/dc/elements/1.1/>\n" +
+                    "\n" +
+                    "SELECT ?who ?g ?mbox\n" +
+                    "FROM <http://example.org/dft.ttl>\n" +
+                    "FROM NAMED <http://example.org/alice>\n" +
+                    "FROM NAMED <http://example.org/bob>\n" +
+                    "WHERE\n" +
+                    "{\n" +
+                    "   ?g dc:publisher ?who .\n" +
+                    "   GRAPH ?g { ?x foaf:mbox ?mbox }\n" +
+                    "}");
+        }
+        catch(QueryException qe){
+            System.out.println("Invalid SPARQL query.");
+        }
 
         System.out.println("getting graphs");
 
