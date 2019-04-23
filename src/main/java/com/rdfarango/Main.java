@@ -61,6 +61,9 @@ public class Main {
 
         SSE.write(op);
 
+        //TODO possibly use below tutorial for visitor pattern to translate algebra tree
+        //https://www.codeproject.com/Articles/1241363/Expression-Tree-Traversal-Via-Visitor-Pattern-in-P
+
         }
         catch(QueryException qe){
             System.out.println("Invalid SPARQL query.");
