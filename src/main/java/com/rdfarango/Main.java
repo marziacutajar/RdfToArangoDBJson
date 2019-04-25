@@ -80,7 +80,7 @@ public class Main {
             model.read(fileName) ;
 
             System.out.println("Parsing RDF into JSON...");
-            RdfToJsonBuilder2 builder = new RdfToJsonBuilder2();
+            RdfToJsonBuilder builder = new RdfToJsonBuilder();
 
             //to handle triples in different named graphs, we need to use Dataset, not one Model
             //then iterate over all named (and default) models in the dataset and create triples
@@ -96,9 +96,10 @@ public class Main {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
             String formattedDate = sdf.format(new Date());
             String valuesFileName = "results/arango_values_" + formattedDate + ".json";
-            //String edgesFileName = "results/arango_edges_" + formattedDate + ".json";
-            //builder.SaveJsonCollectionsToFiles(valuesFileName, edgesFileName);
-            builder.SaveJsonCollectionsToFiles(valuesFileName);
+            String edgesFileName = "results/arango_edges_" + formattedDate + ".json";
+            String literalsFileName = "results/arango_literals_" + formattedDate + ".json";
+            builder.SaveJsonCollectionsToFiles(valuesFileName, literalsFileName, edgesFileName);
+            //builder.SaveJsonCollectionsToFiles(valuesFileName);
         }
         catch(ParseException exp) {
             System.err.println( "Parsing failed.  Reason: " + exp.getMessage() );

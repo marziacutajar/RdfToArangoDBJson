@@ -9,11 +9,8 @@ import com.rdfarango.constants.ArangoAttributes;
 import com.rdfarango.constants.RdfObjectTypes;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.impl.*;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.util.SplitIRI;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -25,11 +22,13 @@ public class RdfToJsonBuilder {
     private int blank_node_count;
     private int namespace_count;
 
-    private Map<String, Integer> URI_RESOURCES_MAP;
-    private Map<Literal, Integer> LITERALS_MAP;
+    private Map<String, String> URI_RESOURCES_MAP;
+    private Map<Literal, String> LITERALS_MAP;
     private Map<String, String> BLANK_NODES_MAP;
 
-    private ArrayNode jsonValues;
+    private ArrayNode jsonNamespaces;
+    private ArrayNode jsonResources;
+    private ArrayNode jsonLiterals;
     private ArrayNode jsonEdges;
 
     ObjectMapper mapper = new ObjectMapper();
@@ -42,7 +41,9 @@ public class RdfToJsonBuilder {
         URI_RESOURCES_MAP = new HashMap<>();
         LITERALS_MAP = new HashMap<>();
         BLANK_NODES_MAP = new HashMap<>();
-        jsonValues = mapper.createArrayNode();
+        jsonNamespaces = mapper.createArrayNode();
+        jsonResources = mapper.createArrayNode();
+        jsonLiterals = mapper.createArrayNode();
         jsonEdges = mapper.createArrayNode();
     }
 
@@ -57,9 +58,14 @@ public class RdfToJsonBuilder {
     }
 
     @SuppressWarnings("unused")
-    public ArrayNode GetJsonValuesCollection(){
-        return jsonValues;
+    public ArrayNode GetJsonResourcesCollection(){
+        return jsonResources;
     }
+
+    public ArrayNode GetJsonLiteralsCollection(){
+        return jsonLiterals;
+    }
+
 
     @SuppressWarnings("unused")
     public ArrayNode GetJsonEdgesCollection(){
@@ -67,10 +73,11 @@ public class RdfToJsonBuilder {
     }
 
     @SuppressWarnings("unused")
-    public void SaveJsonCollectionsToFiles(String valuesFilePath, String edgesFilePath){
+    public void SaveJsonCollectionsToFiles(String resourcesFilePath, String literalsFilePath, String edgesFilePath){
         try {
             ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
-            writer.writeValue(new File(valuesFilePath), jsonValues);
+            writer.writeValue(new File(resourcesFilePath), jsonResources);
+            writer.writeValue(new File(literalsFilePath), jsonLiterals);
             writer.writeValue(new File(edgesFilePath), jsonEdges);
         }
         catch(IOException exp){
@@ -81,7 +88,7 @@ public class RdfToJsonBuilder {
     private void ProcessNamespaces(Model model){
         //iterate over all namespaces and create json doc for each
         Map<String, String> nsPrefixMap = model.getNsPrefixMap();
-        nsPrefixMap.forEach((prefix, ns) -> jsonValues.add(PrefixedNamespaceToJson(prefix, ns)));
+        nsPrefixMap.forEach((prefix, ns) -> jsonNamespaces.add(PrefixedNamespaceToJson(prefix, ns)));
     }
 
     private ObjectNode PrefixedNamespaceToJson(String prefix, String namespace){
@@ -115,7 +122,7 @@ public class RdfToJsonBuilder {
             ObjectNode json_object = mapper.createObjectNode();
             Literal l = node.asLiteral();
 
-            int key = l.hashCode();
+            String key = String.valueOf(l.hashCode());
             json_object.put(ArangoAttributes.KEY, key);
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.LITERAL);
             json_object.put(ArangoAttributes.LITERAL_DATA_TYPE, l.getDatatypeURI());
@@ -134,7 +141,7 @@ public class RdfToJsonBuilder {
 
             LITERALS_MAP.put(l, key);
 
-            jsonValues.add(json_object);
+            jsonLiterals.add(json_object);
         }
         else {
             //else handle resource
@@ -160,7 +167,7 @@ public class RdfToJsonBuilder {
             blank_node_count++;
             BLANK_NODES_MAP.put(anonId, key);
 
-            jsonValues.add(json_object);
+            jsonResources.add(json_object);
         }
     }
 
@@ -181,7 +188,7 @@ public class RdfToJsonBuilder {
         if(URI_RESOURCES_MAP.containsKey(uri))
             return;
 
-        int key = uri.hashCode();
+        String key = String.valueOf(uri.hashCode());
         ObjectNode json_object = mapper.createObjectNode();
         json_object.put(ArangoAttributes.KEY, key);
         json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.URI);
@@ -192,7 +199,7 @@ public class RdfToJsonBuilder {
         //json_object.put(ArangoAttributes.URI_LOCAL_NAME, SplitIRI.localname(uri));
 
         URI_RESOURCES_MAP.put(uri, key);
-        jsonValues.add(json_object);
+        jsonResources.add(json_object);
     }
 
     private void AddEdgeDocument(String subjectKey, String objectKey, String predicateUri){
