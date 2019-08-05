@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-//TODO add comments for every important part
-
 /**
  * Transforms RDF data to JSON - each triple/quad is transformed into a single JSON object
  */
@@ -70,7 +68,7 @@ public class RdfToJsonBuilder2 {
     /**
      * Method used to process object nodes in triples
      * @param node
-     * @return
+     * @return json object representing the resource in the object position of current triple
      */
     private ObjectNode ProcessObject(RDFNode node){
         if(node.isLiteral()){
@@ -104,7 +102,7 @@ public class RdfToJsonBuilder2 {
     /**
      * Method used to process resources in triples (URI or blank node)
      * @param res
-     * @return
+     * @return json object representing uri or blank node resource
      */
     private ObjectNode ProcessResource(Resource res){
         if (res.isURIResource()){
@@ -127,6 +125,11 @@ public class RdfToJsonBuilder2 {
         return null;
     }
 
+    /**
+     * Used to process triples in a Jena model, loops over triples one by one
+     * @param model Jena model containing RDF data
+     * @param graphName uri identifying named graph, if RDF data was in one
+     */
     private void ProcessTriples(Model model, String graphName){
         for (final StmtIterator stmts = model.listStatements(); stmts.hasNext(); ) {
             Statement stmt = stmts.next();
@@ -146,7 +149,7 @@ public class RdfToJsonBuilder2 {
     /**
      * Method used to process URIs in triples
      * @param resource representing a subject/predicate/object of a triple
-     * @return
+     * @return json object representing uri resource
      */
     private ObjectNode ProcessUri(Resource resource){
         //handle uri
