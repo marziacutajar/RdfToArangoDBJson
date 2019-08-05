@@ -21,18 +21,21 @@ import java.util.Map;
 
 //TODO add comments for every important part
 
+/**
+ * Transforms RDF data to JSON - each triple/quad is transformed into a single JSON object
+ */
 public class RdfToJsonBuilder2 {
     private int blank_node_count;
     private Map<String, String> BLANK_NODES_MAP;
 
-    private ArrayNode jsonValues;
+    private ArrayNode jsonObjects;
 
     ObjectMapper mapper = new ObjectMapper();
 
     public RdfToJsonBuilder2(){
         blank_node_count = 0;
         BLANK_NODES_MAP = new HashMap<>();
-        jsonValues = mapper.createArrayNode();
+        jsonObjects = mapper.createArrayNode();
     }
 
     public RdfToJsonBuilder2 RDFModelToJson(Model model, String graphName){
@@ -40,22 +43,35 @@ public class RdfToJsonBuilder2 {
         return this;
     }
 
+    /**
+     * Returns array of json objects, where each object represents a triple/quad
+     * @return array of json objects
+     */
     @SuppressWarnings("unused")
-    public ArrayNode GetJsonValuesCollection(){
-        return jsonValues;
+    public ArrayNode GetJsonObjectsCollection(){
+        return jsonObjects;
     }
 
+    /**
+     * Save the array of json objects representing all the triples/quads to file
+     * @param valuesFilePath - path to file where to save json objects
+     */
     @SuppressWarnings("unused")
     public void SaveJsonCollectionsToFiles(String valuesFilePath){
         try {
             ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
-            writer.writeValue(new File(valuesFilePath), jsonValues);
+            writer.writeValue(new File(valuesFilePath), jsonObjects);
         }
         catch(IOException exp){
             System.err.println("Error while creating JSON file. Reason: " + exp.getMessage());
         }
     }
 
+    /**
+     * Method used to process object nodes in triples
+     * @param node
+     * @return
+     */
     private ObjectNode ProcessObject(RDFNode node){
         if(node.isLiteral()){
             //handle literal
@@ -85,9 +101,14 @@ public class RdfToJsonBuilder2 {
         }
     }
 
+    /**
+     * Method used to process resources in triples (URI or blank node)
+     * @param res
+     * @return
+     */
     private ObjectNode ProcessResource(Resource res){
         if (res.isURIResource()){
-            return ProcessUri(res, false);
+            return ProcessUri(res);
         }
         else if (res.isAnon()){
             //handle blank node
@@ -111,27 +132,30 @@ public class RdfToJsonBuilder2 {
             Statement stmt = stmts.next();
 
             ObjectNode json_triple = mapper.createObjectNode();
-            json_triple.set("s", ProcessResource(stmt.getSubject()));
-            json_triple.set("p", ProcessUri(stmt.getPredicate(), true));
-            json_triple.set("o", ProcessObject(stmt.getObject()));
+            json_triple.set(ArangoAttributes.SUBJECT, ProcessResource(stmt.getSubject()));
+            json_triple.set(ArangoAttributes.PREDICATE, ProcessUri(stmt.getPredicate()));
+            json_triple.set(ArangoAttributes.OBJECT, ProcessObject(stmt.getObject()));
 
             if(!StringUtils.isBlank(graphName))
-                json_triple.put("g", graphName);
+                json_triple.put(ArangoAttributes.GRAPH_NAME, graphName);
 
-            jsonValues.add(json_triple);
+            jsonObjects.add(json_triple);
         }
     }
 
-    private ObjectNode ProcessUri(Resource resource, boolean isPredicate){
+    /**
+     * Method used to process URIs in triples
+     * @param resource representing a subject/predicate/object of a triple
+     * @return
+     */
+    private ObjectNode ProcessUri(Resource resource){
         //handle uri
         String uri = resource.getURI();
 
         ObjectNode json_object = mapper.createObjectNode();
 
-        //predicates are obviously uris
-        if(!isPredicate)
-            json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.URI);
-        json_object.put(ArangoAttributes.URI, uri);
+        json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);
+        json_object.put(ArangoAttributes.IRI, uri);
 
         //TODO decide whether below namespace and localName attributes are really needed
         //json_object.put(ArangoAttributes.NAMESPACE, SplitIRI.namespace(uri));

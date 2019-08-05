@@ -29,7 +29,8 @@ public class RdfToJsonBuilder {
     private ArrayNode jsonNamespaces;
     private ArrayNode jsonResources;
     private ArrayNode jsonLiterals;
-    private ArrayNode jsonEdges;
+    private ArrayNode jsonEdgesToResources;
+    private ArrayNode jsonEdgesToLiterals;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -44,7 +45,8 @@ public class RdfToJsonBuilder {
         jsonNamespaces = mapper.createArrayNode();
         jsonResources = mapper.createArrayNode();
         jsonLiterals = mapper.createArrayNode();
-        jsonEdges = mapper.createArrayNode();
+        jsonEdgesToResources = mapper.createArrayNode();
+        jsonEdgesToLiterals = mapper.createArrayNode();
     }
 
     public RdfToJsonBuilder RDFModelToJson(Model model, String graphName){
@@ -68,17 +70,24 @@ public class RdfToJsonBuilder {
 
 
     @SuppressWarnings("unused")
-    public ArrayNode GetJsonEdgesCollection(){
-        return jsonEdges;
+    public ArrayNode GetJsonEdgesToResourcesCollection(){
+        return jsonEdgesToResources;
     }
 
     @SuppressWarnings("unused")
-    public void SaveJsonCollectionsToFiles(String resourcesFilePath, String literalsFilePath, String edgesFilePath){
+    public ArrayNode GetJsonEdgesToLiteralsCollection(){
+        return jsonEdgesToLiterals;
+    }
+
+
+    @SuppressWarnings("unused")
+    public void SaveJsonCollectionsToFiles(String resourcesFilePath, String literalsFilePath, String edgesToResourcesFilePath, String edgesToLiteralsFilePath){
         try {
             ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
             writer.writeValue(new File(resourcesFilePath), jsonResources);
             writer.writeValue(new File(literalsFilePath), jsonLiterals);
-            writer.writeValue(new File(edgesFilePath), jsonEdges);
+            writer.writeValue(new File(edgesToResourcesFilePath), jsonEdgesToResources);
+            writer.writeValue(new File(edgesToLiteralsFilePath), jsonEdgesToLiterals);
         }
         catch(IOException exp){
             System.err.println("Error while creating JSON file. Reason: " + exp.getMessage());
@@ -97,7 +106,7 @@ public class RdfToJsonBuilder {
         json_object.put(ArangoAttributes.KEY, key);
         json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.NAMESPACE);
         json_object.put(ArangoAttributes.PREFIX, prefix);
-        json_object.put(ArangoAttributes.URI, namespace);
+        json_object.put(ArangoAttributes.IRI, namespace);
 
         return json_object;
     }
@@ -178,7 +187,7 @@ public class RdfToJsonBuilder {
             //TODO consider not adding JSON docs for predicates that aren't subjects in other triples
             //ProcessUri(prop);
 
-            AddEdgeDocument(getResourceKey(stmt.getSubject()), getObjectKey(stmt.getObject()), prop.getURI());
+            AddEdgeDocument(getResourceKey(stmt.getSubject()), stmt.getObject(), prop.getURI());
         }
     }
 
@@ -191,8 +200,8 @@ public class RdfToJsonBuilder {
         String key = String.valueOf(uri.hashCode());
         ObjectNode json_object = mapper.createObjectNode();
         json_object.put(ArangoAttributes.KEY, key);
-        json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.URI);
-        json_object.put(ArangoAttributes.URI, uri);
+        json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);
+        json_object.put(ArangoAttributes.IRI, uri);
 
         //TODO decide whether below namespace and localName attributes are really needed
         //json_object.put(ArangoAttributes.NAMESPACE, SplitIRI.namespace(uri));
@@ -202,12 +211,12 @@ public class RdfToJsonBuilder {
         jsonResources.add(json_object);
     }
 
-    private void AddEdgeDocument(String subjectKey, String objectKey, String predicateUri){
+    private void AddEdgeDocument(String subjectKey, RDFNode object, String predicateUri){
         ObjectNode json_edge_object = mapper.createObjectNode();
 
         //when importing into arango, we will then tell it to append a prefix (collection name) to _from and _to values
         json_edge_object.put(ArangoAttributes.EDGE_FROM, subjectKey);
-        json_edge_object.put(ArangoAttributes.EDGE_TO, objectKey);
+        json_edge_object.put(ArangoAttributes.EDGE_TO, getObjectKey(object));
         //TODO if we create seperate vertices for all predicate uris, consider setting this to the id/key of the predicate's vertex
         //however we don't have to do that..
         json_edge_object.put(ArangoAttributes.EDGE_PREDICATE, predicateUri);
@@ -215,7 +224,11 @@ public class RdfToJsonBuilder {
         if(!StringUtils.isBlank(currentGraphName))
             json_edge_object.put(ArangoAttributes.GRAPH_NAME, currentGraphName);
 
-        jsonEdges.add(json_edge_object);
+
+        if(object.isLiteral())
+            jsonEdgesToLiterals.add(json_edge_object);
+        else
+            jsonEdgesToResources.add(json_edge_object);
     }
 
     private String getNextBlankNodeKey(){
