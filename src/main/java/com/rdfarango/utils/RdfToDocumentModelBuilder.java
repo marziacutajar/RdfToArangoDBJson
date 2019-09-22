@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rdfarango.constants.ArangoAttributes;
 import com.rdfarango.constants.RdfObjectTypes;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.MethodNotSupportedException;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.impl.RDFLangString;
 import org.apache.jena.datatypes.xsd.impl.XSDAbstractDateTimeType;
@@ -16,13 +17,14 @@ import org.apache.jena.rdf.model.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Transforms RDF data to JSON - each triple/quad is transformed into a single JSON object
  */
-public class RdfToJsonBuilder2 {
+public class RdfToDocumentModelBuilder implements ArangoDbModelDataBuilder {
     private int blank_node_count;
     private Map<String, String> BLANK_NODES_MAP;
 
@@ -30,13 +32,17 @@ public class RdfToJsonBuilder2 {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    public RdfToJsonBuilder2(){
+    public RdfToDocumentModelBuilder(){
         blank_node_count = 0;
         BLANK_NODES_MAP = new HashMap<>();
         jsonObjects = mapper.createArrayNode();
     }
 
-    public RdfToJsonBuilder2 RDFModelToJson(Model model, String graphName){
+    public RdfToDocumentModelBuilder RDFModelToJson(Model model){
+        return this.RDFModelToJson(model, null);
+    }
+
+    public RdfToDocumentModelBuilder RDFModelToJson(Model model, String graphName){
         ProcessTriples(model, graphName);
         return this;
     }
@@ -52,13 +58,13 @@ public class RdfToJsonBuilder2 {
 
     /**
      * Save the array of json objects representing all the triples/quads to file
-     * @param valuesFilePath - path to file where to save json objects
      */
     @SuppressWarnings("unused")
-    public void SaveJsonCollectionsToFiles(String valuesFilePath){
+    public void SaveJsonCollectionsToFiles(){
         try {
+            String formattedDate = FileNameUtils.DATE_FORMAT.format(new Date());
             ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
-            writer.writeValue(new File(valuesFilePath), jsonObjects);
+            writer.writeValue(new File(FileNameUtils.GetValuesFileName(formattedDate)), jsonObjects);
         }
         catch(IOException exp){
             System.err.println("Error while creating JSON file. Reason: " + exp.getMessage());
@@ -80,15 +86,10 @@ public class RdfToJsonBuilder2 {
             json_object.put(ArangoAttributes.LITERAL_DATA_TYPE, l.getDatatypeURI());
 
             RDFDatatype literalType = l.getDatatype();
-            if(literalType instanceof XSDAbstractDateTimeType || literalType instanceof XSDBaseStringType){
-                json_object.put(ArangoAttributes.LITERAL_VALUE, l.getString());
-            }
-            else if (literalType instanceof RDFLangString){
-                json_object.put(ArangoAttributes.LITERAL_VALUE, l.getString());
+            json_object.put(ArangoAttributes.VALUE, l.getString());
+
+            if (literalType instanceof RDFLangString){
                 json_object.put(ArangoAttributes.LITERAL_LANGUAGE, l.getLanguage());
-            }
-            else{
-                json_object.putPOJO(ArangoAttributes.LITERAL_VALUE, l.getValue());
             }
 
             return json_object;
@@ -158,7 +159,7 @@ public class RdfToJsonBuilder2 {
         ObjectNode json_object = mapper.createObjectNode();
 
         json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);
-        json_object.put(ArangoAttributes.IRI, uri);
+        json_object.put(ArangoAttributes.VALUE, uri);
 
         //TODO decide whether below namespace and localName attributes are really needed
         //json_object.put(ArangoAttributes.NAMESPACE, SplitIRI.namespace(uri));
