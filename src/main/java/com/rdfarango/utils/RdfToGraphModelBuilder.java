@@ -32,6 +32,9 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
     private ArrayNode jsonLiterals;
     private ArrayNode jsonEdges;
 
+    //TODO introduce properties file that contains the start key value for literals, etc.
+    private int LiteralsCurrentKey;
+
     ObjectMapper mapper = new ObjectMapper();
 
     private String currentGraphName;
@@ -46,6 +49,7 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
         jsonResources = mapper.createArrayNode();
         jsonLiterals = mapper.createArrayNode();
         jsonEdges = mapper.createArrayNode();
+        LiteralsCurrentKey = 1;
     }
 
     public RdfToGraphModelBuilder RDFModelToJson(Model model){
@@ -133,7 +137,8 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
             ObjectNode json_object = mapper.createObjectNode();
             Literal l = node.asLiteral();
 
-            String key = String.valueOf(l.hashCode());
+            String key = String.valueOf(LiteralsCurrentKey);
+            LiteralsCurrentKey++;
             json_object.put(ArangoAttributes.KEY, key);
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.LITERAL);
             json_object.put(ArangoAttributes.LITERAL_DATA_TYPE, l.getDatatypeURI());
@@ -251,7 +256,7 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
 
     private String getObjectKey(RDFNode node){
         if(node.isLiteral())
-            return LITERALS_MAP.get(node.asLiteral()).toString();
+            return LITERALS_MAP.get(node.asLiteral());
 
         return getResourceKey(node.asResource());
     }
