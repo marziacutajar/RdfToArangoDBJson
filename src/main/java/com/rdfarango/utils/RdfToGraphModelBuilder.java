@@ -30,8 +30,7 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
     private ArrayNode jsonNamespaces;
     private ArrayNode jsonResources;
     private ArrayNode jsonLiterals;
-    private ArrayNode jsonEdgesToResources;
-    private ArrayNode jsonEdgesToLiterals;
+    private ArrayNode jsonEdges;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -46,8 +45,7 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
         jsonNamespaces = mapper.createArrayNode();
         jsonResources = mapper.createArrayNode();
         jsonLiterals = mapper.createArrayNode();
-        jsonEdgesToResources = mapper.createArrayNode();
-        jsonEdgesToLiterals = mapper.createArrayNode();
+        jsonEdges = mapper.createArrayNode();
     }
 
     public RdfToGraphModelBuilder RDFModelToJson(Model model){
@@ -76,12 +74,12 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
 
     @SuppressWarnings("unused")
     public ArrayNode GetJsonEdgesToResourcesCollection(){
-        return jsonEdgesToResources;
+        return jsonEdges;
     }
 
     @SuppressWarnings("unused")
     public ArrayNode GetJsonEdgesToLiteralsCollection(){
-        return jsonEdgesToLiterals;
+        return jsonEdges;
     }
 
     @SuppressWarnings("unused")
@@ -91,8 +89,7 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
             ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
             writer.writeValue(new File(FileNameUtils.GetResourcesFileName(formattedDate)), jsonResources);
             writer.writeValue(new File(FileNameUtils.GetLiteralsFileName(formattedDate)), jsonLiterals);
-            writer.writeValue(new File(FileNameUtils.GetEdgesToResourcesFileName(formattedDate)), jsonEdgesToResources);
-            writer.writeValue(new File(FileNameUtils.GetEdgesToLiteralsFileName(formattedDate)), jsonEdgesToLiterals);
+            writer.writeValue(new File(FileNameUtils.GetEdgesFileName(formattedDate)), jsonEdges);
         }
         catch(IOException exp){
             System.err.println("Error while creating JSON file. Reason: " + exp.getMessage());
@@ -228,9 +225,9 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
             json_edge_object.put(ArangoAttributes.GRAPH_NAME, currentGraphName);
 
         if(object.isLiteral())
-            jsonEdgesToLiterals.add(json_edge_object);
+            jsonEdges.add(json_edge_object);
         else
-            jsonEdgesToResources.add(json_edge_object);
+            jsonEdges.add(json_edge_object);
     }
 
     private String getNextBlankNodeKey(){

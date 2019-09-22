@@ -8,9 +8,8 @@ public class FileNameUtils {//date format used for generating unique timestamped
     private static String folder = "results/";
     private static String values_file_name_prefix = "arango_values_";
     private static String resources_file_name_prefix = "arango_resources_";
-    private static String edgesToResourcesFileName_prefix = "arango_edges_resources_";
-    private static String edgesToLiteralsFileName_prefix = "arango_edges_literals_";
     private static String literalsFileName_prefix = "arango_literals_";
+    private static String edgesFileName_prefix = "arango_edges_";
 
     private static String jsonFileExtension = ".json";
 
@@ -22,12 +21,8 @@ public class FileNameUtils {//date format used for generating unique timestamped
         return GetFileName(resources_file_name_prefix, formattedDate);
     }
 
-    public static String GetEdgesToResourcesFileName(String formattedDate){
-        return GetFileName(edgesToResourcesFileName_prefix, formattedDate);
-    }
-
-    public static String GetEdgesToLiteralsFileName(String formattedDate){
-        return GetFileName(edgesToLiteralsFileName_prefix, formattedDate);
+    public static String GetEdgesFileName(String formattedDate){
+        return GetFileName(edgesFileName_prefix, formattedDate);
     }
 
     public static String GetLiteralsFileName(String formattedDate){
