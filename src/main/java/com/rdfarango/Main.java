@@ -1,10 +1,13 @@
 package com.rdfarango;
 
+import com.rdfarango.constants.Configuration;
 import com.rdfarango.utils.ArangoDbModelDataBuilder;
 import com.rdfarango.utils.RdfToDocumentModelBuilder;
 import com.rdfarango.utils.RdfToGraphModelBuilder;
 import org.apache.commons.cli.*;
 import org.apache.jena.rdf.model.*;
+
+import java.util.Properties;
 
 public class Main {
 
@@ -35,7 +38,6 @@ public class Main {
             model.read(fileName);
 
             System.out.println("Parsing RDF into JSON...");
-
             ArangoDbModelDataBuilder builder;
 
             switch (data_model){

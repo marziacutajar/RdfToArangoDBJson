@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rdfarango.constants.ArangoAttributes;
+import com.rdfarango.constants.Configuration;
 import com.rdfarango.constants.RdfObjectTypes;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.datatypes.RDFDatatype;
@@ -52,7 +53,7 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
         jsonEdgesToLiterals = mapper.createArrayNode();
 
         //TODO introduce properties file that contains the start key value for literals, etc.
-        LiteralsCurrentKey = 1;
+        LiteralsCurrentKey = Configuration.GetGraphLiteralsStartKey();
     }
 
     public RdfToGraphModelBuilder RDFModelToJson(Model model){
