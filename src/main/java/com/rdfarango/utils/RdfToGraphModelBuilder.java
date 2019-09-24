@@ -51,8 +51,6 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
         jsonLiterals = mapper.createArrayNode();
         jsonEdgesToResources = mapper.createArrayNode();
         jsonEdgesToLiterals = mapper.createArrayNode();
-
-        //TODO introduce properties file that contains the start key value for literals, etc.
         LiteralsCurrentKey = Configuration.GetGraphLiteralsStartKey();
     }
 
