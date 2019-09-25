@@ -15,7 +15,7 @@ public class Configuration {
 
     static {
         Properties fallback = new Properties();
-        fallback.put("graph.literalsCollection.start_key", "1");
+        fallback.put(Keys.GRAPH_LITERALS_START_KEY, "1");
         properties = new Properties(fallback);
 
         try (InputStream input = new FileInputStream(NAME)) {

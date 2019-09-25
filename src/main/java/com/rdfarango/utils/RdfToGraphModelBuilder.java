@@ -254,7 +254,7 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
         if(res.isAnon())
             return BLANK_NODES_MAP.get(res.getURI());
 
-        return URI_RESOURCES_MAP.get(res.getURI()).toString();
+        return URI_RESOURCES_MAP.get(res.getURI());
     }
 
     private String getObjectKey(RDFNode node){
