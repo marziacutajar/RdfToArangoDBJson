@@ -1,6 +1,7 @@
 package com.rdfarango.utils;
 
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -9,14 +10,11 @@ import com.rdfarango.constants.ArangoAttributes;
 import com.rdfarango.constants.Configuration;
 import com.rdfarango.constants.RdfObjectTypes;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.datatypes.xsd.impl.*;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.RDF;
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 //TODO add comments for every important part
 
@@ -29,10 +27,11 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
     private Map<String, String> BLANK_NODES_MAP;
 
     private ArrayNode jsonNamespaces;
-    private ArrayNode jsonResources;
+    //private ArrayNode jsonResources;
     private ArrayNode jsonLiterals;
     private ArrayNode jsonEdgesToResources;
     private ArrayNode jsonEdgesToLiterals;
+    private List<ObjectNode> jsonResources;
 
     private int LiteralsCurrentKey;
 
@@ -47,11 +46,12 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
         LITERALS_MAP = new HashMap<>();
         BLANK_NODES_MAP = new HashMap<>();
         jsonNamespaces = mapper.createArrayNode();
-        jsonResources = mapper.createArrayNode();
+        //jsonResources = mapper.createArrayNode();
         jsonLiterals = mapper.createArrayNode();
         jsonEdgesToResources = mapper.createArrayNode();
         jsonEdgesToLiterals = mapper.createArrayNode();
         LiteralsCurrentKey = Configuration.GetGraphLiteralsStartKey();
+        jsonResources = new ArrayList<>();
     }
 
     public RdfToGraphModelBuilder RDFModelToJson(Model model){
@@ -70,7 +70,7 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
 
     @SuppressWarnings("unused")
     public ArrayNode GetJsonResourcesCollection(){
-        return jsonResources;
+        return mapper.createArrayNode().addAll(jsonResources);
     }
 
     public ArrayNode GetJsonLiteralsCollection(){
@@ -137,25 +137,12 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
     private void ProcessObject(RDFNode node){
         if(node.isLiteral()){
             //handle literal
-            ObjectNode json_object = mapper.createObjectNode();
             Literal l = node.asLiteral();
 
             String key = String.valueOf(LiteralsCurrentKey);
             LiteralsCurrentKey++;
-            json_object.put(ArangoAttributes.KEY, key);
-            json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.LITERAL);
-            json_object.put(ArangoAttributes.LITERAL_DATA_TYPE, l.getDatatypeURI());
-
-            RDFDatatype literalType = l.getDatatype();
-            json_object.put(ArangoAttributes.VALUE, l.getString());
-
-            if (literalType instanceof RDFLangString){
-                json_object.put(ArangoAttributes.LITERAL_LANGUAGE, l.getLanguage());
-            }
-
             LITERALS_MAP.put(l, key);
-
-            jsonLiterals.add(json_object);
+            jsonLiterals.add(TransformUtils.GenerateLiteralJsonObject(mapper, l, key));
         }
         else {
             //else handle resource
@@ -191,7 +178,28 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
             Property prop = stmt.getPredicate();
             //ProcessUri(prop);
 
-            AddEdgeDocument(getResourceKey(stmt.getSubject()), stmt.getObject(), prop.getURI());
+            String resourceKey = getResourceKey(stmt.getSubject());
+            String propertyUri = prop.getURI();
+
+            //TODO keep this if clause only if we want to store rdf:type as an attribute of the uri node
+            if(propertyUri.equals(RDF.type.getURI())){
+                //if property is rdf:type, let's add the value as a property of the subject
+                ObjectNode resourceNode = jsonResources.stream().filter(x -> x.get(ArangoAttributes.KEY).asText() == resourceKey).findFirst().orElse(null);
+                ObjectNode rdfTypeObject = mapper.createObjectNode();
+                rdfTypeObject.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);
+                rdfTypeObject.put(ArangoAttributes.VALUE, stmt.getObject().asResource().getURI());
+                JsonNode currRdfTypesArray = resourceNode.get(ArangoAttributes.RDF_TYPE);
+                if(currRdfTypesArray == null){
+                    resourceNode.putArray(ArangoAttributes.RDF_TYPE).add(rdfTypeObject);
+                }
+                else {
+                    ((ArrayNode) currRdfTypesArray).add(rdfTypeObject);
+                }
+
+                continue;
+            }
+
+            AddEdgeDocument(resourceKey, stmt.getObject(), prop.getURI());
         }
     }
 

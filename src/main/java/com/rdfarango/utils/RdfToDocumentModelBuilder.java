@@ -77,23 +77,7 @@ public class RdfToDocumentModelBuilder implements ArangoDbModelDataBuilder {
     private ObjectNode ProcessObject(RDFNode node){
         if(node.isLiteral()){
             //handle literal
-            ObjectNode json_object = mapper.createObjectNode();
-            Literal l = node.asLiteral();
-
-            json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.LITERAL);
-            json_object.put(ArangoAttributes.LITERAL_DATA_TYPE, l.getDatatypeURI());
-
-            RDFDatatype literalType = l.getDatatype();
-            if(literalType instanceof XSDBaseNumericType)
-                json_object.put(ArangoAttributes.VALUE, l.getDouble());
-            else
-                json_object.put(ArangoAttributes.VALUE, l.getString());
-
-            if (literalType instanceof RDFLangString){
-                json_object.put(ArangoAttributes.LITERAL_LANGUAGE, l.getLanguage());
-            }
-
-            return json_object;
+            return TransformUtils.GenerateLiteralJsonObject(mapper, node.asLiteral(), null);
         }
         else {
             //else handle resource
