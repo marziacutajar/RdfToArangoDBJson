@@ -1,13 +1,10 @@
 package com.rdfarango;
 
-import com.rdfarango.constants.Configuration;
 import com.rdfarango.utils.ArangoDbModelDataBuilder;
 import com.rdfarango.utils.RdfToDocumentModelBuilder;
 import com.rdfarango.utils.RdfToGraphModelBuilder;
 import org.apache.commons.cli.*;
 import org.apache.jena.rdf.model.*;
-
-import java.util.Properties;
 
 public class Main {
 

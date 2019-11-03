@@ -146,10 +146,6 @@ public class RdfToDocumentModelBuilder implements ArangoDbModelDataBuilder {
         json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);
         json_object.put(ArangoAttributes.VALUE, uri);
 
-        //TODO decide whether below namespace and localName attributes are really needed
-        //json_object.put(ArangoAttributes.NAMESPACE, SplitIRI.namespace(uri));
-        //json_object.put(ArangoAttributes.URI_LOCAL_NAME, SplitIRI.localname(uri));
-
         return json_object;
     }
 
