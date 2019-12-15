@@ -1,7 +1,6 @@
 package com.rdfarango.utils;
 
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -11,7 +10,6 @@ import com.rdfarango.constants.Configuration;
 import com.rdfarango.constants.RdfObjectTypes;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.vocabulary.RDF;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -179,25 +177,6 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
             //ProcessUri(prop);
 
             String resourceKey = getResourceKey(stmt.getSubject());
-            String propertyUri = prop.getURI();
-
-            //TODO keep this if clause only if we want to store rdf:type as an attribute of the uri node
-            if(propertyUri.equals(RDF.type.getURI())){
-                //if property is rdf:type, let's add the value as a property of the subject
-                ObjectNode resourceNode = jsonResources.stream().filter(x -> x.get(ArangoAttributes.KEY).asText() == resourceKey).findFirst().orElse(null);
-                ObjectNode rdfTypeObject = mapper.createObjectNode();
-                rdfTypeObject.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);
-                rdfTypeObject.put(ArangoAttributes.VALUE, stmt.getObject().asResource().getURI());
-                JsonNode currRdfTypesArray = resourceNode.get(ArangoAttributes.RDF_TYPE);
-                if(currRdfTypesArray == null){
-                    resourceNode.putArray(ArangoAttributes.RDF_TYPE).add(rdfTypeObject);
-                }
-                else {
-                    ((ArrayNode) currRdfTypesArray).add(rdfTypeObject);
-                }
-
-                continue;
-            }
 
             AddEdgeDocument(resourceKey, stmt.getObject(), prop.getURI());
         }
@@ -225,10 +204,10 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
         //when importing into arango, we will then tell it to append a prefix (collection name) to _from and _to values
         json_edge_object.put(ArangoAttributes.EDGE_FROM, subjectKey);
         json_edge_object.put(ArangoAttributes.EDGE_TO, getObjectKey(object));
-        //TODO if we create seperate vertices for all predicate uris, consider setting this to the id/key of the predicate's vertex
 
         ObjectNode predicate_json_object = mapper.createObjectNode();
         predicate_json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);
+        //in the future, if we create seperate vertices for all predicate uris, consider setting this to the id/key of the predicate's vertex
         predicate_json_object.put(ArangoAttributes.VALUE, predicateUri);
 
         json_edge_object.set(ArangoAttributes.EDGE_PREDICATE, predicate_json_object);
