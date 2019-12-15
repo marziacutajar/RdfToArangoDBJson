@@ -96,12 +96,8 @@ public class RdfToDocumentModelBuilder implements ArangoDbModelDataBuilder {
             String anonId = res.getId().toString();
 
             ObjectNode json_object = mapper.createObjectNode();
-
-            String key = getNextBlankNodeKey();
-            json_object.put(ArangoAttributes.KEY, key);
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.BLANK_NODE);
-            blank_node_count++;
-            BLANK_NODES_MAP.put(anonId, key);
+            json_object.put(ArangoAttributes.VALUE, anonId);
 
             return json_object;
         }
@@ -144,11 +140,5 @@ public class RdfToDocumentModelBuilder implements ArangoDbModelDataBuilder {
         json_object.put(ArangoAttributes.VALUE, uri);
 
         return json_object;
-    }
-
-    private String getNextBlankNodeKey(){
-        String key = "BLANK_" + blank_node_count;
-        blank_node_count++;
-        return key;
     }
 }

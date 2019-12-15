@@ -163,7 +163,7 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
             String key = getNextBlankNodeKey();
             json_object.put(ArangoAttributes.KEY, key);
             json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.BLANK_NODE);
-            blank_node_count++;
+            json_object.put(ArangoAttributes.VALUE, anonId);
             BLANK_NODES_MAP.put(anonId, key);
 
             jsonResources.add(json_object);
@@ -235,7 +235,7 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
 
     private String getResourceKey(Resource res){
         if(res.isAnon())
-            return BLANK_NODES_MAP.get(res.getURI());
+            return BLANK_NODES_MAP.get(res.getId().toString());
 
         return URI_RESOURCES_MAP.get(res.getURI());
     }
