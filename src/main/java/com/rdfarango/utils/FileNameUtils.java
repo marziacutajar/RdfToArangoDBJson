@@ -6,7 +6,7 @@ public class FileNameUtils {//date format used for generating unique timestamped
     public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
 
     private static String folder = "results/";
-    private static String values_file_name_prefix = "arango_values_";
+    private static String values_file_name_prefix = "arango_documents_";
     private static String resources_file_name_prefix = "arango_resources_";
     private static String literalsFileName_prefix = "arango_literals_";
     private static String edgesToResourcesFileName_prefix = "arango_edges_resources_";
