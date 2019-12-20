@@ -1,8 +1,8 @@
-RDF to ArangoDB JSON Transformer
+# RDF to ArangoDB JSON Transformer
 
 This project provides a way of parsing RDF data into a JSON format suitable for the multimodel database ArangoDB.
 
-- How is the RDF transformed?
+## How is the RDF transformed?
 
 There are two approaches for transforming the RDF data. 
 
@@ -17,7 +17,7 @@ The second approach is to transform each unique subject and object into an Arang
 Predicates are then represented as graph edges between subject and object documents, 
 such that the predicate IRI is stored as an attribute of the edge document.
 
-- Running the program
+## Running the program
 
 To run the program easily without an IDE, you need to make sure to have the Gradle build tool installed. 
 Refer to https://gradle.org/install/ for download and installation details.
@@ -31,7 +31,7 @@ The command-line program expects two input parameters as following:
 
 #java -jar RDF-to-Arango-Transformer.jar -f "C:\Users\marzia\Documents\Test Data\testdata.ttl" -m D
 
-- Program outputs
+## Program outputs
 
 If the Document Approach is used, the program will output one file containing the created JSON documents.
 This file can be found in the /results directory within the project folder. The file name is in the format
@@ -44,7 +44,7 @@ These files contain the below data:
 3. arango_edges_resources_<current_datetime>.json - contains all the edge documents for predicates linking a subject to an IRI or blank node object.
 4. arango_edges_literals_<current_datetime>.json - contains all the edge documents for predicates linking a subject to a literal object.
 
-- Importing the data into ArangoDB
+## Importing the data into ArangoDB
 
 #TODO here put link to arangoimport doc
 
