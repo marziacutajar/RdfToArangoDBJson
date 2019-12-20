@@ -59,16 +59,19 @@ These files contain the below data:
 The JSON data can be imported into ArangoDB using the [Arangoimport](https://www.arangodb.com/docs/stable/programs-arangoimport-examples-json.html) command-line tool.
 
 For the Document Approach, the data in the produced file can be imported using a command such as the below:
-arangoimport --file arango_documents_201912150913.json --collection triples --create-collection true 
---batch-size 1000000000 --server.database database_name
+
+    arangoimport --file arango_documents_201912150913.json --collection triples --create-collection true 
+    --batch-size 1000000000 --server.database database_name
 
 The user should modify the command-line arguments accordingly. 
 
 For the Graph Approach, the two files of data containing resources and literals must be imported first using two commands such as the below:
-arangoimport --file arango_resources_201912150936.json --collection vertices_resources --create-collection true 
---batch-size 1000000000 --server.database database_name
-arangoimport --file arango_literals_201912150936.json --collection vertices_literals --create-collection true 
---batch-size 1000000000 --server.database database_name
+    
+    arangoimport --file arango_resources_201912150936.json --collection vertices_resources --create-collection true 
+    --batch-size 1000000000 --server.database database_name
+
+    arangoimport --file arango_literals_201912150936.json --collection vertices_literals --create-collection true 
+    --batch-size 1000000000 --server.database database_name
 
 Using the above commands, we import the resource documents into a collection called vertices_resources, and the literal documents into a seperate
 collection called vertices_literals. However, these can be stored in the same collection if desired, simply by specifying the same collection name
@@ -76,10 +79,12 @@ in both commands.
 
 The other two files containing edge documents can then be imported. Please make sure that you have created the required edge collection(s) in your
 database before importing. We use the below commands to import the data:
-arangoimport --file arango_edges_resources_201912150936.json --collection edges --from-collection-prefix vertices_resources 
---to-collection-prefix vertices_resources --batch-size 1000000000 --server.database database_name
-arangoimport --file arango_edges_literals_201912150936.json --collection edges --from-collection-prefix vertices_resources 
---to-collection-prefix vertices_literals --batch-size 1000000000 --server.database database_name
+    
+    arangoimport --file arango_edges_resources_201912150936.json --collection edges --from-collection-prefix vertices_resources 
+    --to-collection-prefix vertices_resources --batch-size 1000000000 --server.database database_name
+
+    arangoimport --file arango_edges_literals_201912150936.json --collection edges --from-collection-prefix vertices_resources 
+    --to-collection-prefix vertices_literals --batch-size 1000000000 --server.database database_name
 
 
 
