@@ -30,7 +30,16 @@ The command-line program expects two input parameters as following:
 - -f: Path to the RDF data file
 - -m: The approach for transforming the RDF data, i.e. a value of D to use the Document Approach, G to use the Graph Approach
 
-java -jar RDF-to-Arango-Transformer.jar -f "C:\Users\marzia\Documents\Test Data\testdata.ttl" -m D
+Another option is to create a fat JAR file using Gradle by executing the below in command-line:
+   
+    gradle fatJar
+    
+The jar file will be saved to the build\libs directory within the main project directory. To run the jar file, navigate 
+to the directory containing the file and run as follows:
+    
+    cd build\libs
+    
+    java -jar RDF_to_Arango_Transformer.jar -f "C:\Users\marzia\Documents\Test Data\testdata.ttl" -m D
 
 ## Program outputs
 
