@@ -19,11 +19,19 @@ such that the predicate IRI is stored as an attribute of the edge document.
 
 - Running the program
 
-The command-line program expects two input parameters as below:
+To run the program easily without an IDE, you need to make sure to have the Gradle build tool installed. 
+Refer to https://gradle.org/install/ for download and installation details.
+
+The program can then be built and run with a single command as below:
+gradle run --args="-f=C:\Users\marzia\Documents\test_data\test.ttl -m=D"
+
+The command-line program expects two input parameters as following:
 -f: Path to the RDF data file
 -m: The approach for transforming the RDF data, i.e. a value of D to use the Document Approach, G to use the Graph Approach
 
-java -jar RDF-to-Arango-Transformer.jar -f "C:\Users\marzia\Documents\Test Data\testdata.ttl" -m D
+#java -jar RDF-to-Arango-Transformer.jar -f "C:\Users\marzia\Documents\Test Data\testdata.ttl" -m D
+
+- Program outputs
 
 If the Document Approach is used, the program will output one file containing the created JSON documents.
 This file can be found in the /results directory within the project folder. The file name is in the format
