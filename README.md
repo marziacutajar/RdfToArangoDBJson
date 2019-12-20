@@ -23,6 +23,7 @@ To run the program easily without an IDE, you need to make sure to have the Grad
 Refer to https://gradle.org/install/ for download and installation details.
 
 The program can then be built and run with a single command as below:
+    
     gradle run --args="-f=C:\Users\marzia\Documents\test_data\test.ttl -m=D"
 
 The command-line program expects two input parameters as following:
