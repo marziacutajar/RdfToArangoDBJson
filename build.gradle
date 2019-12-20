@@ -28,21 +28,13 @@ application {
     mainClassName = 'com.rdfarango.Main'
 }
 
-jar {
+task fatJar(type: Jar) {
     manifest {
-        attributes(
+        attributes (
                 'Main-Class': 'com.rdfarango.Main'
         )
     }
-
-    //below is used to produce a "fat jar" 
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+    baseName = project.name
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }
-
-/*task runFinalJar(type: JavaExec) {
-    classpath = files('build/libs/RDF_to_Arango_Transformer.jar')
-    classpath += sourceSets.main.runtimeClasspath
-    main = 'com.rdfarango.Main'
-}*/
