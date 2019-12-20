@@ -27,8 +27,8 @@ The program can then be built and run with a single command as below:
     gradle run --args="-f=C:\Users\marzia\Documents\test_data\test.ttl -m=D"
 
 The command-line program expects two input parameters as following:
--f: Path to the RDF data file
--m: The approach for transforming the RDF data, i.e. a value of D to use the Document Approach, G to use the Graph Approach
+- -f: Path to the RDF data file
+- -m: The approach for transforming the RDF data, i.e. a value of D to use the Document Approach, G to use the Graph Approach
 
 java -jar RDF-to-Arango-Transformer.jar -f "C:\Users\marzia\Documents\Test Data\testdata.ttl" -m D
 
