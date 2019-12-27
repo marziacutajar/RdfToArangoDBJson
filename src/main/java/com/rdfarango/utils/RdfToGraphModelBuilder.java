@@ -14,42 +14,36 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-//TODO add comments for every important part
-
 public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
-    private int blank_node_count;
-    private int namespace_count;
 
     private Map<String, String> URI_RESOURCES_MAP;
     private Map<Literal, String> LITERALS_MAP;
     private Map<String, String> BLANK_NODES_MAP;
 
-    private ArrayNode jsonNamespaces;
-    //private ArrayNode jsonResources;
     private ArrayNode jsonLiterals;
     private ArrayNode jsonEdgesToResources;
     private ArrayNode jsonEdgesToLiterals;
     private List<ObjectNode> jsonResources;
 
-    private int LiteralsCurrentKey;
+    private int BLANK_NODE_COUNT;
+    private int CURR_LITERAL_KEY;
 
     ObjectMapper mapper = new ObjectMapper();
 
     private String currentGraphName;
 
     public RdfToGraphModelBuilder(){
-        blank_node_count = 0;
-        namespace_count = 0;
         URI_RESOURCES_MAP = new HashMap<>();
         LITERALS_MAP = new HashMap<>();
         BLANK_NODES_MAP = new HashMap<>();
-        jsonNamespaces = mapper.createArrayNode();
-        //jsonResources = mapper.createArrayNode();
+        jsonResources = new ArrayList<>();
         jsonLiterals = mapper.createArrayNode();
         jsonEdgesToResources = mapper.createArrayNode();
         jsonEdgesToLiterals = mapper.createArrayNode();
-        LiteralsCurrentKey = Configuration.GetGraphLiteralsStartKey();
-        jsonResources = new ArrayList<>();
+        BLANK_NODE_COUNT = 0;
+        //we get the start key for literals from config file, in case the user wants to add literals
+        //to an existing ArangoDB collection and needs to avoid key collisions
+        CURR_LITERAL_KEY = Configuration.GetGraphLiteralsStartKey();
     }
 
     public RdfToGraphModelBuilder RDFModelToJson(Model model){
@@ -58,7 +52,6 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
 
     public RdfToGraphModelBuilder RDFModelToJson(Model model, String graphName){
         currentGraphName = graphName;
-        ProcessNamespaces(model);
         ProcessSubjects(model);
         ProcessObjects(model);
         ProcessTriples(model);
@@ -71,10 +64,10 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
         return mapper.createArrayNode().addAll(jsonResources);
     }
 
+    @SuppressWarnings("unused")
     public ArrayNode GetJsonLiteralsCollection(){
         return jsonLiterals;
     }
-
 
     @SuppressWarnings("unused")
     public ArrayNode GetJsonEdgesToResourcesCollection(){
@@ -101,32 +94,15 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
         }
     }
 
-    private void ProcessNamespaces(Model model){
-        //iterate over all namespaces and create json doc for each
-        Map<String, String> nsPrefixMap = model.getNsPrefixMap();
-        nsPrefixMap.forEach((prefix, ns) -> jsonNamespaces.add(PrefixedNamespaceToJson(prefix, ns)));
-    }
-
-    private ObjectNode PrefixedNamespaceToJson(String prefix, String namespace){
-        ObjectNode json_object = mapper.createObjectNode();
-        String key = getNextNamespaceKey();
-        json_object.put(ArangoAttributes.KEY, key);
-        json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.NAMESPACE);
-        json_object.put(ArangoAttributes.PREFIX, prefix);
-        json_object.put(ArangoAttributes.VALUE, namespace);
-
-        return json_object;
-    }
-
     private void ProcessSubjects(Model model){
-        //iterate over all subjects(uri resources, blank nodes) and create json doc for each
+        //iterate over all subjects(uri resources, blank nodes) and create json object for each
         for (final ResIterator nodes = model.listSubjects(); nodes.hasNext(); ) {
             ProcessResource(nodes.next());
         }
     }
 
     private void ProcessObjects(Model model){
-        //iterate over all objects(uri resources, blank nodes, literals) and create json doc for each
+        //iterate over all objects(uri resources, blank nodes, literals) and create json object for each
         for (final NodeIterator nodes = model.listObjects(); nodes.hasNext(); ) {
             ProcessObject(nodes.next());
         }
@@ -137,13 +113,12 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
             //handle literal
             Literal l = node.asLiteral();
 
-            String key = String.valueOf(LiteralsCurrentKey);
-            LiteralsCurrentKey++;
+            String key = getNextLiteralKey();
             LITERALS_MAP.put(l, key);
             jsonLiterals.add(TransformUtils.GenerateLiteralJsonObject(mapper, l, key));
         }
         else {
-            //else handle resource
+            //handle resource
             ProcessResource(node.asResource());
         }
     }
@@ -222,14 +197,14 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
     }
 
     private String getNextBlankNodeKey(){
-        String key = "BLANK_" + blank_node_count;
-        blank_node_count++;
+        String key = "BLANK_" + BLANK_NODE_COUNT;
+        BLANK_NODE_COUNT++;
         return key;
     }
 
-    private String getNextNamespaceKey(){
-        String key = "NAMESPACE_" + namespace_count;
-        namespace_count++;
+    private String getNextLiteralKey(){
+        String key = String.valueOf(CURR_LITERAL_KEY);
+        CURR_LITERAL_KEY++;
         return key;
     }
 

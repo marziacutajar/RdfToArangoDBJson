@@ -10,9 +10,11 @@ import org.apache.jena.datatypes.xsd.impl.XSDBaseNumericType;
 import org.apache.jena.rdf.model.Literal;
 
 public class TransformUtils {
+
     public static ObjectNode GenerateLiteralJsonObject(ObjectMapper mapper, Literal l, String _key){
         ObjectNode json_object = mapper.createObjectNode();
 
+        //if _key is specified, use it, otherwise ArangoDB will auto-generate it on import
         if(_key != null)
             json_object.put(ArangoAttributes.KEY, _key);
 
@@ -25,7 +27,7 @@ public class TransformUtils {
         else
             json_object.put(ArangoAttributes.VALUE, l.getString());
 
-        if (literalType instanceof RDFLangString){
+        if(literalType instanceof RDFLangString){
             json_object.put(ArangoAttributes.LITERAL_LANGUAGE, l.getLanguage());
         }
 

@@ -2,7 +2,9 @@ package com.rdfarango.utils;
 
 import java.text.SimpleDateFormat;
 
-public class FileNameUtils {//date format used for generating unique timestamped json file names
+public class FileNameUtils {
+
+    //date format used for generating unique timestamped json file names
     public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
 
     private static String folder = "results/";

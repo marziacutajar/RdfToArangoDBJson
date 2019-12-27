@@ -9,27 +9,20 @@ import com.rdfarango.constants.ArangoAttributes;
 import com.rdfarango.constants.RdfObjectTypes;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Transforms RDF data to JSON - each triple/quad is transformed into a single JSON object
  */
 public class RdfToDocumentModelBuilder implements ArangoDbModelDataBuilder {
-    private int blank_node_count;
-    private Map<String, String> BLANK_NODES_MAP;
 
     private ArrayNode jsonObjects;
 
     ObjectMapper mapper = new ObjectMapper();
 
     public RdfToDocumentModelBuilder(){
-        blank_node_count = 0;
-        BLANK_NODES_MAP = new HashMap<>();
         jsonObjects = mapper.createArrayNode();
     }
 
@@ -67,18 +60,23 @@ public class RdfToDocumentModelBuilder implements ArangoDbModelDataBuilder {
     }
 
     /**
-     * Method used to process object nodes in triples
-     * @param node
-     * @return json object representing the resource in the object position of current triple
+     * Used to process triples in a Jena model, loops over triples one by one
+     * @param model Jena model containing RDF data
+     * @param graphName uri identifying named graph, if RDF data was in one
      */
-    private ObjectNode ProcessObject(RDFNode node){
-        if(node.isLiteral()){
-            //handle literal
-            return TransformUtils.GenerateLiteralJsonObject(mapper, node.asLiteral(), null);
-        }
-        else {
-            //else handle resource
-            return ProcessResource(node.asResource());
+    private void ProcessTriples(Model model, String graphName){
+        for (final StmtIterator stmts = model.listStatements(); stmts.hasNext(); ) {
+            Statement stmt = stmts.next();
+
+            ObjectNode json_triple = mapper.createObjectNode();
+            json_triple.set(ArangoAttributes.SUBJECT, ProcessResource(stmt.getSubject()));
+            json_triple.set(ArangoAttributes.PREDICATE, ProcessUri(stmt.getPredicate()));
+            json_triple.set(ArangoAttributes.OBJECT, ProcessObject(stmt.getObject()));
+
+            if(!StringUtils.isBlank(graphName))
+                json_triple.put(ArangoAttributes.GRAPH_NAME, graphName);
+
+            jsonObjects.add(json_triple);
         }
     }
 
@@ -105,23 +103,18 @@ public class RdfToDocumentModelBuilder implements ArangoDbModelDataBuilder {
     }
 
     /**
-     * Used to process triples in a Jena model, loops over triples one by one
-     * @param model Jena model containing RDF data
-     * @param graphName uri identifying named graph, if RDF data was in one
+     * Method used to process object nodes in triples
+     * @param node
+     * @return json object representing the resource in the object position of current triple
      */
-    private void ProcessTriples(Model model, String graphName){
-        for (final StmtIterator stmts = model.listStatements(); stmts.hasNext(); ) {
-            Statement stmt = stmts.next();
-
-            ObjectNode json_triple = mapper.createObjectNode();
-            json_triple.set(ArangoAttributes.SUBJECT, ProcessResource(stmt.getSubject()));
-            json_triple.set(ArangoAttributes.PREDICATE, ProcessUri(stmt.getPredicate()));
-            json_triple.set(ArangoAttributes.OBJECT, ProcessObject(stmt.getObject()));
-
-            if(!StringUtils.isBlank(graphName))
-                json_triple.put(ArangoAttributes.GRAPH_NAME, graphName);
-
-            jsonObjects.add(json_triple);
+    private ObjectNode ProcessObject(RDFNode node){
+        if(node.isLiteral()){
+            //handle literal
+            return TransformUtils.GenerateLiteralJsonObject(mapper, node.asLiteral(), null);
+        }
+        else {
+            //else handle resource
+            return ProcessResource(node.asResource());
         }
     }
 
