@@ -4,7 +4,9 @@ import com.rdfarango.utils.ArangoDbModelDataBuilder;
 import com.rdfarango.utils.RdfToDocumentModelBuilder;
 import com.rdfarango.utils.RdfToGraphModelBuilder;
 import org.apache.commons.cli.*;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.riot.RDFDataMgr;
+import java.util.Iterator;
 
 public class Main {
 
@@ -31,8 +33,10 @@ public class Main {
             System.out.println("Reading RDF file...");
             String fileName = line.getOptionValue("f");
 
-            Model model = ModelFactory.createDefaultModel();
-            model.read(fileName);
+            //to handle triples in different named graphs, we need to use Dataset, not one Model
+            //then iterate over and process all the triples in the default model and named graph models in the dataset
+            Dataset dataset = RDFDataMgr.loadDataset(fileName);
+            Iterator<String> namedGraphs = dataset.listNames();
 
             System.out.println("Parsing RDF into JSON...");
             ArangoDbModelDataBuilder builder;
@@ -47,17 +51,12 @@ public class Main {
                 default: throw new RuntimeException("Unsupported ArangoDB data model");
             }
 
-            /*//to handle triples in different named graphs, we need to use Dataset, not one Model
-            //then iterate over all named (and default) models in the dataset and create triples
-            Dataset dataset = RDFDataMgr.loadDataset(fileName);
-            Iterator<String> namedGraphs = dataset.listNames();
             builder.RDFModelToJson(dataset.getDefaultModel(), null);
             while (namedGraphs.hasNext()) {
                 String namedGraph = namedGraphs.next();
                 builder.RDFModelToJson(dataset.getNamedModel(namedGraph), namedGraph);
-            }*/
+            }
 
-            builder.RDFModelToJson(model);
             builder.SaveJsonCollectionsToFiles();
         }
         catch(ParseException exp) {
