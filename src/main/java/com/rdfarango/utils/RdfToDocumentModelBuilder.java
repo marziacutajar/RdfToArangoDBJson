@@ -74,7 +74,7 @@ public class RdfToDocumentModelBuilder implements ArangoDbModelDataBuilder {
             json_triple.set(ArangoAttributes.OBJECT, ProcessObject(stmt.getObject()));
 
             if(!StringUtils.isBlank(graphName))
-                json_triple.put(ArangoAttributes.GRAPH_NAME, graphName);
+                json_triple.set(ArangoAttributes.GRAPH_NAME, ProcessUri(graphName));
 
             jsonObjects.add(json_triple);
         }
@@ -127,6 +127,15 @@ public class RdfToDocumentModelBuilder implements ArangoDbModelDataBuilder {
         //handle uri
         String uri = resource.getURI();
 
+        ObjectNode json_object = mapper.createObjectNode();
+
+        json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);
+        json_object.put(ArangoAttributes.VALUE, uri);
+
+        return json_object;
+    }
+
+    private ObjectNode ProcessUri(String uri){
         ObjectNode json_object = mapper.createObjectNode();
 
         json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);

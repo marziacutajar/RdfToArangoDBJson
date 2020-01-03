@@ -180,15 +180,12 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
         json_edge_object.put(ArangoAttributes.EDGE_FROM, subjectKey);
         json_edge_object.put(ArangoAttributes.EDGE_TO, getObjectKey(object));
 
-        ObjectNode predicate_json_object = mapper.createObjectNode();
-        predicate_json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);
         //in the future, if we create seperate vertices for all predicate uris, consider setting this to the id/key of the predicate's vertex
-        predicate_json_object.put(ArangoAttributes.VALUE, predicateUri);
+        json_edge_object.set(ArangoAttributes.EDGE_PREDICATE, ProcessUri(predicateUri));
 
-        json_edge_object.set(ArangoAttributes.EDGE_PREDICATE, predicate_json_object);
-
-        if(!StringUtils.isBlank(currentGraphName))
-            json_edge_object.put(ArangoAttributes.GRAPH_NAME, currentGraphName);
+        if(!StringUtils.isBlank(currentGraphName)){
+            json_edge_object.set(ArangoAttributes.GRAPH_NAME, ProcessUri(currentGraphName));
+        }
 
         if(object.isLiteral())
             jsonEdgesToLiterals.add(json_edge_object);
@@ -220,5 +217,14 @@ public class RdfToGraphModelBuilder implements ArangoDbModelDataBuilder{
             return LITERALS_MAP.get(node.asLiteral());
 
         return getResourceKey(node.asResource());
+    }
+
+    private ObjectNode ProcessUri(String uri){
+        ObjectNode json_object = mapper.createObjectNode();
+
+        json_object.put(ArangoAttributes.TYPE, RdfObjectTypes.IRI);
+        json_object.put(ArangoAttributes.VALUE, uri);
+
+        return json_object;
     }
 }
