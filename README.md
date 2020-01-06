@@ -9,13 +9,11 @@ There are two approaches for transforming the RDF data.
 One approach is to transform each RDF triple into an ArangoDB document such that 
 the subject, predicate, and object are each tranformed into a JSON object, and 
 these three JSON objects are nested within the ArangoDB document. 
-This is called the Document approach, as it uses the document model of ArangoDB 
+This is called the Basic Approach, as it uses the document model of ArangoDB 
 but not the graph model.
-#Each JSON object has a type attribute that specifies whether it is a URI resource, a blank node, or a literal. 
 
 The second approach is to transform each unique subject and object into an ArangoDB document of their own.
-Predicates are then represented as graph edges between subject and object documents, 
-such that the predicate IRI is stored as an attribute of the edge document.
+Predicates are then represented as graph edges between subject and object documents, such that the predicate IRI is stored as an attribute of the edge document. This is called the Graph Approach.
 
 ## Running the program
 
@@ -28,7 +26,7 @@ The program can then be built and run with a single command as below:
 
 The command-line program expects two input parameters as following:
 - -f: Path to the RDF data file
-- -m: The approach for transforming the RDF data, i.e. a value of D to use the Document Approach, G to use the Graph Approach
+- -m: The approach for transforming the RDF data, i.e. a value of D to use the Basic Approach, G to use the Graph Approach
 
 Another option is to create a fat JAR file using Gradle by executing the below in command-line:
    
@@ -43,7 +41,7 @@ to the directory containing the file and run as follows:
 
 ## Program outputs
 
-If the Document Approach is used, the program will output one file containing the created JSON documents.
+If the Basic Approach is used, the program will output one file containing the created JSON documents.
 This file can be found in the /results directory within the project folder. The file name is in the format
 arango_documents_<current_datetime>.json 
 
@@ -58,7 +56,7 @@ These files contain the below data:
 
 The JSON data can be imported into ArangoDB using the [Arangoimport](https://www.arangodb.com/docs/stable/programs-arangoimport-examples-json.html) command-line tool.
 
-For the Document Approach, the data in the produced file can be imported using a command such as the below:
+For the Basic Approach, the data in the produced file can be imported using a command such as the below:
 
     arangoimport --file arango_documents_201912150913.json --collection triples --create-collection true 
     --batch-size 1000000000 --server.database database_name
