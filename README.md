@@ -26,7 +26,7 @@ The program can then be built and run with a single command as below:
 
 The command-line program expects two input parameters as following:
 - -f: Path to the RDF data file
-- -m: The approach for transforming the RDF data, i.e. a value of D to use the Basic Approach, G to use the Graph Approach
+- -m: The approach for transforming the RDF data, i.e. a value of 'D' to use the Basic Approach, 'G' to use the Graph Approach
 
 Another option is to create a fat JAR file using Gradle by executing the below in command-line:
    
