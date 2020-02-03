@@ -24,8 +24,8 @@ The program can then be built and run with a single command as below:
     gradle run --args="-f=C:\Users\marzia\Documents\test_data\test.ttl -m=D"
 
 The command-line program expects two input parameters as following:
-- -f <file_directory_here> : Path to the RDF data file
-- -m <data_model_here> : The approach for transforming the RDF data, i.e. a value of 'D' to use the Basic Approach, 'G' to use the Graph Approach
+- -f <file_directory> : Path to the RDF data file
+- -m <data_model> : The approach for transforming the RDF data, i.e. a value of 'D' to use the Basic Approach, 'G' to use the Graph Approach
 
 Another option is to create a fat JAR file using Gradle by executing the below in command-line:
    
