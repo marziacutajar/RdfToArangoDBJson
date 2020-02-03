@@ -19,9 +19,11 @@ Predicates are then represented as graph edges between subject and object docume
 
 To run the program easily without an IDE, you need to make sure to have the Gradle build tool installed. The program has been built and run succesfully with Gradle version 6.0.1, thus newer backward-compatible versions should also work. Refer to https://gradle.org/install/ for download and installation details.
 
-The program can then be built and run with a single command as below:
+The program can then be built and run on the test data file given in the sample_data folder of this repository, or any other file containing valid RDF data. This is done using a single command as below:
     
-    gradle run --args="-f=C:\Users\marzia\Documents\test_data\test.ttl -m=D"
+    gradle run --args="-f=sample_data\bsbm_dataset_1000products.ttl -m=D"
+    
+Please note that this command works on a Windows OS. Please modify accordingly if using any other operating system.
 
 The command-line program expects two input parameters as following:
 - -f <file_directory> : Path to the RDF data file
