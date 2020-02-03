@@ -38,7 +38,7 @@ to the directory containing the file and run as follows:
     
     cd build\libs
     
-    java -jar RDF_to_Arango_Transformer.jar -f "C:\Users\marzia\Documents\test_data\test.ttl" -m D
+    java -jar RDF_to_Arango_Transformer.jar -f <path_to_rdf_data_file_here> -m D
 
 ## Program outputs
 
