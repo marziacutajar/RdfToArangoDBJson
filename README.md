@@ -72,7 +72,7 @@ For the Graph Approach, the two files of data containing resources and literals 
     arangoimport --file arango_literals_201912150936.json --collection vertices_literals --create-collection true 
     --batch-size 1000000000 --server.database database_name
 
-Using the above commands, we import the resource documents into a collection called vertices_resources, and the literal documents into a seperate collection called vertices_literals. Two different collections are used to store vertices and literals for more optimal performance when querying the data. However, these can be stored in the same collection if desired, simply by specifying the same collection name in both commands.
+Using the above commands, we import the resource documents into a collection called vertices_resources, and the literal documents into a seperate collection called vertices_literals. We use two different collections to store vertices and literals respectively for more optimal performance when querying the data. However, these can be stored in the same collection if desired, simply by specifying the same collection name in both commands.
 
 The other two files containing edge documents can then be imported. Please make sure that you have created the required edge collection(s) in your
 database before importing. We use the below commands to import the data:
