@@ -17,17 +17,17 @@ Predicates are then represented as graph edges between subject and object docume
 
 ## Running the program
 
+The command-line program expects two input parameters as following:
+- -f <file_directory> : Path to the RDF data file
+- -m <data_model> : The approach for transforming the RDF data, i.e. a value of 'D' to use the Basic Approach, 'G' to use the Graph Approach
+
 To run the program easily without an IDE, you need to make sure to have the Gradle build tool installed. The program has been built and run succesfully with Gradle version 6.0.1, thus newer backward-compatible versions should also work. Refer to https://gradle.org/install/ for download and installation details.
 
-The program can then be built and run on the test data file given in the `sample_data` folder of this repository, or any other file containing valid RDF data. This is done using a single command in the command-line as below:
+The program can then be built and run on any file containing valid RDF data to be transformed. A file containing sample RDF data is given in the `sample_data` folder of this repository for use. Simply open your command-line and run the below command, replacing the file path and data model arguments as required.
     
     gradle run --args="-f=sample_data\bsbm_dataset_1000products.ttl -m=D"
     
 Please note that this command, as well as all others given below, work on a Windows OS. Please modify accordingly if using any other operating system.
-
-The command-line program expects two input parameters as following:
-- -f <file_directory> : Path to the RDF data file
-- -m <data_model> : The approach for transforming the RDF data, i.e. a value of 'D' to use the Basic Approach, 'G' to use the Graph Approach
 
 Another option is to create a fat JAR file using Gradle by executing the below in command-line:
    
